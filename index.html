@@ -84,6 +84,10 @@
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
       <span class="nav-label">CRM</span>
     </div>
+    <div class="nav-item" data-panel="rastreamento" onclick="switchPanel('rastreamento')">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg></div>
+      <span class="nav-label">Rastreio</span>
+    </div>
   </div>
 
   <div class="sb-toggle" onclick="toggleSidebar()">
@@ -107,16 +111,18 @@
   <iframe class="panel-frame active" id="frame-maquinas" src="about:blank" loading="lazy"></iframe>
   <iframe class="panel-frame" id="frame-frota" src="about:blank" loading="lazy"></iframe>
   <iframe class="panel-frame" id="frame-crm" src="about:blank" loading="lazy"></iframe>
+  <iframe class="panel-frame" id="frame-rastreamento" src="about:blank" loading="lazy"></iframe>
 </main>
 
 <script>
 const URLS={
   maquinas:'https://mmclocacoesmaquinas.vercel.app?auth=Mmc2026',
   frota:'https://mmc-frota.vercel.app?auth=Mmc2026',
-  crm:'https://mmc-crm.vercel.app?auth=Mmc2026'
+  crm:'https://mmc-crm.vercel.app?auth=Mmc2026',
+  rastreamento:'https://6537-omniloc-inteligencia-embarcada.ftrack.me/mapaGeral_v3/#/'
 };
 const PASS='Mmc2026';
-let loaded={maquinas:false,frota:false,crm:false};
+let loaded={maquinas:false,frota:false,crm:false,rastreamento:false};
 let current='maquinas';
 
 // Check if already logged in

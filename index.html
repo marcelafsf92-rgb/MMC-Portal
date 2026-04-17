@@ -64,7 +64,7 @@
 </head>
 <body>
 
-<nav class="sidebar" id="sidebar">
+<nav class="sidebar" id="sidebar" style="display:none">
   <div class="sb-logo" onclick="toggleSidebar()">
     <img src="logo-header.png" alt="MMC">
   </div>
@@ -89,8 +89,20 @@
   </div>
 </nav>
 
-<main class="content">
-  <iframe class="panel-frame active" id="frame-maquinas" src="https://mmclocacoesmaquinas.vercel.app" loading="lazy"></iframe>
+<!-- Login Screen -->
+<div id="loginScreen" style="position:fixed;inset:0;z-index:500;background:linear-gradient(135deg,#0f1b3d 0%,#162350 50%,#1E3A8A 100%);display:flex;align-items:center;justify-content:center">
+  <div style="text-align:center;width:100%;max-width:360px;padding:20px">
+    <img src="logo-header.png" alt="MMC" style="height:60px;margin-bottom:24px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;color:#fff;margin-bottom:4px">MMC LOCAÇÕES</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:32px">Portal de Gestão</div>
+    <input id="loginPass" type="password" placeholder="Senha de acesso" style="width:100%;padding:14px 18px;border:2px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;text-align:center;margin-bottom:14px" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()" style="width:100%;padding:14px;background:var(--gold);color:var(--navy);border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;cursor:pointer;letter-spacing:.5px">Entrar</button>
+    <div id="loginErr" style="color:#ef4444;font-size:13px;margin-top:12px;display:none">Senha incorreta</div>
+  </div>
+</div>
+
+<main class="content" style="display:none" id="mainContent">
+  <iframe class="panel-frame active" id="frame-maquinas" src="about:blank" loading="lazy"></iframe>
   <iframe class="panel-frame" id="frame-frota" src="about:blank" loading="lazy"></iframe>
   <iframe class="panel-frame" id="frame-crm" src="about:blank" loading="lazy"></iframe>
 </main>
@@ -101,21 +113,43 @@ const URLS={
   frota:'https://mmc-frota.vercel.app',
   crm:'https://mmc-crm.vercel.app'
 };
-let loaded={maquinas:true,frota:false,crm:false};
+const PASS='Mmc2026';
+let loaded={maquinas:false,frota:false,crm:false};
 let current='maquinas';
+
+// Check if already logged in
+if(sessionStorage.getItem('mmc_portal_auth')==='true') enterPortal();
+
+function doLogin(){
+  const p=document.getElementById('loginPass').value;
+  if(p===PASS){
+    sessionStorage.setItem('mmc_portal_auth','true');
+    enterPortal();
+  }else{
+    document.getElementById('loginErr').style.display='block';
+    document.getElementById('loginPass').style.borderColor='#ef4444';
+    setTimeout(()=>{document.getElementById('loginErr').style.display='none';document.getElementById('loginPass').style.borderColor='rgba(255,255,255,.15)'},2000);
+  }
+}
+
+function enterPortal(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('sidebar').style.display='flex';
+  document.getElementById('mainContent').style.display='block';
+  // Load first panel with editor mode auto-activated
+  document.getElementById('frame-maquinas').src=URLS.maquinas;
+  loaded.maquinas=true;
+}
 
 function switchPanel(name){
   if(current===name)return;
   current=name;
-  // Load iframe if first time
   if(!loaded[name]){
     document.getElementById('frame-'+name).src=URLS[name];
     loaded[name]=true;
   }
-  // Toggle frames
   document.querySelectorAll('.panel-frame').forEach(f=>f.classList.remove('active'));
   document.getElementById('frame-'+name).classList.add('active');
-  // Toggle nav
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.panel===name));
 }
 
@@ -123,7 +157,6 @@ function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('open');
 }
 
-// Close sidebar on mobile when clicking a panel
 if(window.innerWidth<768){
   document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',()=>{
     setTimeout(()=>document.getElementById('sidebar').classList.remove('open'),200);

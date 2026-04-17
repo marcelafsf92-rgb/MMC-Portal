@@ -84,8 +84,8 @@
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
       <span class="nav-label">CRM</span>
     </div>
-    <div class="nav-item" data-panel="rastreamento" onclick="switchPanel('rastreamento')">
-      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg></div>
+    <div class="nav-item" data-panel="rastreio" onclick="switchPanel('rastreio')">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
       <span class="nav-label">Rastreio</span>
     </div>
   </div>
@@ -111,19 +111,29 @@
   <iframe class="panel-frame active" id="frame-maquinas" src="about:blank" loading="lazy"></iframe>
   <iframe class="panel-frame" id="frame-frota" src="about:blank" loading="lazy"></iframe>
   <iframe class="panel-frame" id="frame-crm" src="about:blank" loading="lazy"></iframe>
-  <iframe class="panel-frame" id="frame-rastreamento" src="about:blank" loading="lazy"></iframe>
+  <div class="panel-frame" id="frame-rastreio" style="display:none;flex-direction:column">
+    <div style="display:flex;gap:0;background:#0f172a;padding:6px 12px;flex-shrink:0">
+      <button onclick="switchTracker('ftrack')" id="trkBtn1" style="flex:1;padding:10px;border:none;border-radius:8px 0 0 8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;background:var(--gold);color:var(--navy)">FTrack / Movit</button>
+      <button onclick="switchTracker('stc')" id="trkBtn2" style="flex:1;padding:10px;border:none;border-radius:0 8px 8px 0;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;background:rgba(255,255,255,.1);color:#fff">STC / ProBase</button>
+    </div>
+    <iframe id="trackerFrame" src="about:blank" style="flex:1;border:none;width:100%"></iframe>
+  </div>
 </main>
 
 <script>
 const URLS={
   maquinas:'https://mmclocacoesmaquinas.vercel.app?auth=Mmc2026',
   frota:'https://mmc-frota.vercel.app?auth=Mmc2026',
-  crm:'https://mmc-crm.vercel.app?auth=Mmc2026',
-  rastreamento:'https://6537-omniloc-inteligencia-embarcada.ftrack.me/mapaGeral_v3/#/'
+  crm:'https://mmc-crm.vercel.app?auth=Mmc2026'
+};
+const TRACKER_URLS={
+  ftrack:'https://6537-omniloc-inteligencia-embarcada.ftrack.me/mapaGeral_v3/#/',
+  stc:'https://ap3.stc.srv.br/webcliente/probase/tracker'
 };
 const PASS='Mmc2026';
-let loaded={maquinas:false,frota:false,crm:false,rastreamento:false};
+let loaded={maquinas:false,frota:false,crm:false,rastreio:false};
 let current='maquinas';
+let currentTracker='ftrack';
 
 // Check if already logged in
 if(sessionStorage.getItem('mmc_portal_auth')==='true') enterPortal();
@@ -144,21 +154,34 @@ function enterPortal(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('sidebar').style.display='flex';
   document.getElementById('mainContent').style.display='block';
-  // Load first panel with editor mode auto-activated
   document.getElementById('frame-maquinas').src=URLS.maquinas;
+  document.getElementById('frame-maquinas').style.display='block';
   loaded.maquinas=true;
 }
 
 function switchPanel(name){
   if(current===name)return;
   current=name;
-  if(!loaded[name]){
-    document.getElementById('frame-'+name).src=URLS[name];
-    loaded[name]=true;
+  // Hide all panels
+  document.querySelectorAll('.panel-frame').forEach(f=>{f.classList.remove('active');f.style.display='none'});
+  if(name==='rastreio'){
+    const el=document.getElementById('frame-rastreio');
+    el.style.display='flex';el.classList.add('active');
+    if(!loaded.rastreio){document.getElementById('trackerFrame').src=TRACKER_URLS[currentTracker];loaded.rastreio=true}
+  }else{
+    if(!loaded[name]){document.getElementById('frame-'+name).src=URLS[name];loaded[name]=true}
+    const el=document.getElementById('frame-'+name);
+    el.style.display='block';el.classList.add('active');
   }
-  document.querySelectorAll('.panel-frame').forEach(f=>f.classList.remove('active'));
-  document.getElementById('frame-'+name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.panel===name));
+}
+function switchTracker(t){
+  currentTracker=t;
+  document.getElementById('trackerFrame').src=TRACKER_URLS[t];
+  document.getElementById('trkBtn1').style.background=t==='ftrack'?'var(--gold)':'rgba(255,255,255,.1)';
+  document.getElementById('trkBtn1').style.color=t==='ftrack'?'var(--navy)':'#fff';
+  document.getElementById('trkBtn2').style.background=t==='stc'?'var(--gold)':'rgba(255,255,255,.1)';
+  document.getElementById('trkBtn2').style.color=t==='stc'?'var(--navy)':'#fff';
 }
 
 function toggleSidebar(){

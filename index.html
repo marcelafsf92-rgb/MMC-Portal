@@ -47,18 +47,20 @@
     .panel-frame{position:absolute;inset:0;border:none;width:100%;height:100%;display:none}
     .panel-frame.active{display:block}
 
-    /* Mobile */
+    /* Mobile - bottom tab bar instead of sidebar */
     @media(max-width:768px){
-      .sidebar{position:fixed;left:0;top:0;width:60px;min-width:60px;z-index:200}
-      .sidebar.open{width:200px;min-width:200px;box-shadow:4px 0 30px rgba(0,0,0,.5)}
-      .content{margin-left:60px;width:calc(100vw - 60px)}
-      .nav-item{padding:10px}
-      .sb-logo img{height:30px}
-    }
-    @media(max-width:480px){
-      .sidebar{width:52px;min-width:52px}
-      .content{margin-left:52px;width:calc(100vw - 52px)}
+      .sidebar{position:fixed;bottom:0;left:0;right:0;top:auto;width:100%!important;min-width:100%!important;height:60px;flex-direction:row;padding:0;border-right:none;border-top:2px solid rgba(245,166,35,.3);z-index:200}
+      .sidebar.open{width:100%!important;min-width:100%!important;box-shadow:none}
+      .sb-logo{display:none}
+      .sb-toggle{display:none}
+      .sb-nav{flex-direction:row;padding:0;gap:0;justify-content:space-around;align-items:center;height:100%}
+      .nav-item{flex-direction:column;gap:2px;padding:6px 12px;border-radius:0;min-height:auto;flex:1;justify-content:center;align-items:center}
+      .nav-item.active::before{display:none}
+      .nav-item.active{background:rgba(245,166,35,.15);border-top:2px solid var(--gold);margin-top:-2px}
+      .nav-label{opacity:1!important;width:auto!important;font-size:10px!important;overflow:visible}
       .nav-icon svg{width:20px;height:20px}
+      .content{margin-left:0;width:100vw;height:calc(100vh - 60px)}
+      .panel-frame{height:calc(100vh - 60px)}
     }
   </style>
 </head>

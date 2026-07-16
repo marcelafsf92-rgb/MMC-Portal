@@ -111,37 +111,19 @@
   <iframe class="panel-frame active" id="frame-maquinas" src="about:blank" loading="lazy"></iframe>
   <iframe class="panel-frame" id="frame-frota" src="about:blank" loading="lazy"></iframe>
   <iframe class="panel-frame" id="frame-crm" src="about:blank" loading="lazy"></iframe>
-  <div class="panel-frame" id="frame-rastreio" style="display:none;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f1b3d,#162350);gap:20px">
-    <div style="text-align:center;color:#fff;margin-bottom:10px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(245,166,35,.5)" stroke-width="1.5" style="width:60px;height:60px;margin-bottom:12px"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:24px">Rastreamento</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:4px">Selecione o sistema de rastreamento</div>
-    </div>
-    <a href="https://6537-omniloc-inteligencia-embarcada.ftrack.me/mapaGeral_v3/#/" target="_blank" style="display:flex;align-items:center;gap:12px;padding:18px 32px;background:rgba(255,255,255,.08);border:2px solid rgba(245,166,35,.3);border-radius:14px;color:#fff;text-decoration:none;width:280px;transition:all .15s;cursor:pointer" onmouseover="this.style.background='rgba(245,166,35,.15)'" onmouseout="this.style.background='rgba(255,255,255,.08)'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" style="width:28px;height:28px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-      <div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px">FTrack / Movit</div><div style="font-size:11px;color:rgba(255,255,255,.5)">Mapa Geral 3.0</div></div>
-    </a>
-    <a href="https://ap3.stc.srv.br/webcliente/probase/tracker" target="_blank" style="display:flex;align-items:center;gap:12px;padding:18px 32px;background:rgba(255,255,255,.08);border:2px solid rgba(245,166,35,.3);border-radius:14px;color:#fff;text-decoration:none;width:280px;transition:all .15s;cursor:pointer" onmouseover="this.style.background='rgba(245,166,35,.15)'" onmouseout="this.style.background='rgba(255,255,255,.08)'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" style="width:28px;height:28px;flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      <div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px">STC / ProBase</div><div style="font-size:11px;color:rgba(255,255,255,.5)">Tracker</div></div>
-    </a>
-  </div>
+  <iframe class="panel-frame" id="frame-rastreio" src="about:blank" loading="lazy"></iframe>
 </main>
 
 <script>
 const URLS={
   maquinas:'https://mmclocacoesmaquinas.vercel.app?auth=Mmc2026',
   frota:'https://mmc-frota.vercel.app?auth=Mmc2026',
-  crm:'https://mmc-crm.vercel.app?auth=Mmc2026'
-};
-const TRACKER_URLS={
-  ftrack:'https://6537-omniloc-inteligencia-embarcada.ftrack.me/mapaGeral_v3/#/',
-  stc:'https://ap3.stc.srv.br/webcliente/probase/tracker'
+  crm:'https://mmc-crm.vercel.app?auth=Mmc2026',
+  rastreio:'https://mmc-rastreio.vercel.app'
 };
 const PASS='Mmc2026';
 let loaded={maquinas:false,frota:false,crm:false,rastreio:false};
 let current='maquinas';
-let currentTracker='ftrack';
 
 // Check if already logged in
 if(sessionStorage.getItem('mmc_portal_auth')==='true') enterPortal();
@@ -172,24 +154,10 @@ function switchPanel(name){
   current=name;
   // Hide all panels
   document.querySelectorAll('.panel-frame').forEach(f=>{f.classList.remove('active');f.style.display='none'});
-  if(name==='rastreio'){
-    const el=document.getElementById('frame-rastreio');
-    el.style.display='flex';el.classList.add('active');
-    if(!loaded.rastreio){document.getElementById('trackerFrame').src=TRACKER_URLS[currentTracker];loaded.rastreio=true}
-  }else{
-    if(!loaded[name]){document.getElementById('frame-'+name).src=URLS[name];loaded[name]=true}
-    const el=document.getElementById('frame-'+name);
-    el.style.display='block';el.classList.add('active');
-  }
+  if(!loaded[name]){document.getElementById('frame-'+name).src=URLS[name];loaded[name]=true}
+  const el=document.getElementById('frame-'+name);
+  el.style.display='block';el.classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.panel===name));
-}
-function switchTracker(t){
-  currentTracker=t;
-  document.getElementById('trackerFrame').src=TRACKER_URLS[t];
-  document.getElementById('trkBtn1').style.background=t==='ftrack'?'var(--gold)':'rgba(255,255,255,.1)';
-  document.getElementById('trkBtn1').style.color=t==='ftrack'?'var(--navy)':'#fff';
-  document.getElementById('trkBtn2').style.background=t==='stc'?'var(--gold)':'rgba(255,255,255,.1)';
-  document.getElementById('trkBtn2').style.color=t==='stc'?'var(--navy)':'#fff';
 }
 
 function toggleSidebar(){

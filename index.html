@@ -117,11 +117,14 @@
 </main>
 
 <script>
+// BUILD: bump quando mudar algum painel — a versão na URL fura o Service Worker
+// velho no aparelho (carrega o painel fresco e atualiza o SW dele de vez).
+const BUILD='20260718-1';
 const URLS={
-  maquinas:'https://mmclocacoesmaquinas.vercel.app?auth=Mmc2026',
-  frota:'https://mmc-frota.vercel.app?auth=Mmc2026',
-  crm:'https://mmc-crm.vercel.app?auth=Mmc2026',
-  rastreio:'https://mmc-rastreio.vercel.app'
+  maquinas:'https://mmclocacoesmaquinas.vercel.app?auth=Mmc2026&v='+BUILD,
+  frota:'https://mmc-frota.vercel.app?auth=Mmc2026&v='+BUILD,
+  crm:'https://mmc-crm.vercel.app?auth=Mmc2026&v='+BUILD,
+  rastreio:'https://mmc-rastreio.vercel.app?v='+BUILD
 };
 const PASS='Mmc2026';
 let loaded={maquinas:false,frota:false,crm:false,rastreio:false};

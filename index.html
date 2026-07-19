@@ -106,9 +106,24 @@
     <img src="logo-header.png" alt="MMC" style="height:60px;margin-bottom:24px">
     <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;color:#fff;margin-bottom:4px">MMC LOCAÇÕES</div>
     <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:32px">Portal de Gestão</div>
+    <button id="btnFace" onclick="entrarFaceID()" style="display:none;width:100%;padding:15px;background:rgba(245,166,35,.15);color:#fff;border:2px solid rgba(245,166,35,.55);border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;cursor:pointer;letter-spacing:.5px;margin-bottom:16px;align-items:center;justify-content:center;gap:10px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" style="width:22px;height:22px"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 10v1M15 10v1M9.5 15a3.5 3.5 0 0 0 5 0"/></svg>
+      Entrar com Face ID
+    </button>
+    <div id="faceOu" style="display:none;color:rgba(255,255,255,.35);font-size:12px;margin-bottom:12px">ou use a senha</div>
     <input id="loginPass" type="password" placeholder="Senha de acesso" style="width:100%;padding:14px 18px;border:2px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;text-align:center;margin-bottom:14px" onkeydown="if(event.key==='Enter')doLogin()">
     <button onclick="doLogin()" style="width:100%;padding:14px;background:var(--gold);color:var(--navy);border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;cursor:pointer;letter-spacing:.5px">Entrar</button>
     <div id="loginErr" style="color:#ef4444;font-size:13px;margin-top:12px;display:none">Senha incorreta</div>
+  </div>
+</div>
+
+<!-- Convite pra ativar o Face ID (1x, depois do login com senha) -->
+<div id="faceBanner" style="display:none;position:fixed;left:12px;right:12px;bottom:calc(52px + var(--navpad) + 12px);z-index:600;background:#162350;border:1px solid rgba(245,166,35,.45);border-radius:14px;padding:14px 16px;box-shadow:0 10px 34px rgba(0,0,0,.45)">
+  <div style="color:#fff;font-size:14.5px;font-weight:600;margin-bottom:3px">Entrar com Face ID?</div>
+  <div style="color:#93a1c6;font-size:12.5px;margin-bottom:12px;line-height:1.45">Da próxima vez você abre o app sem digitar a senha.</div>
+  <div style="display:flex;gap:8px">
+    <button onclick="ativarFaceID()" style="flex:1;padding:11px;background:var(--gold);color:#0f1b3d;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif">Ativar</button>
+    <button onclick="dispensarFaceID()" style="flex:1;padding:11px;background:rgba(255,255,255,.1);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif">Agora não</button>
   </div>
 </div>
 
@@ -133,14 +148,64 @@ const PASS='Mmc2026';
 let loaded={maquinas:false,frota:false,crm:false,rastreio:false};
 let current='maquinas';
 
+// ── Face ID (passkey / WebAuthn) ──────────────────────────────
+// Guarda uma credencial biométrica DESTE aparelho. O desbloqueio é local:
+// se o Face ID reconhecer, libera. A senha continua valendo como reserva.
+const FACE_KEY='mmc_faceid_cred', FACE_SKIP='mmc_faceid_skip';
+const temFaceID=!!(window.PublicKeyCredential&&navigator.credentials&&navigator.credentials.create&&location.protocol==='https:');
+const b64=b=>btoa(String.fromCharCode.apply(null,new Uint8Array(b)));
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+
+async function ativarFaceID(){
+  document.getElementById('faceBanner').style.display='none';
+  if(!temFaceID){alert('Este aparelho não suporta Face ID no navegador.');return}
+  try{
+    const cred=await navigator.credentials.create({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      rp:{name:'MMC Locações',id:location.hostname},
+      user:{id:crypto.getRandomValues(new Uint8Array(16)),name:'mmc',displayName:'MMC Locações'},
+      pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},
+      timeout:60000,attestation:'none'
+    }});
+    localStorage.setItem(FACE_KEY,b64(cred.rawId));
+    alert('Face ID ativado! Da próxima vez é só tocar em "Entrar com Face ID".');
+  }catch(e){alert('Não deu pra ativar o Face ID agora. Você pode tentar de novo no próximo login.')}
+}
+function dispensarFaceID(){document.getElementById('faceBanner').style.display='none';localStorage.setItem(FACE_SKIP,'1')}
+
+async function entrarFaceID(){
+  const id=localStorage.getItem(FACE_KEY); if(!id)return;
+  try{
+    const ok=await navigator.credentials.get({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      allowCredentials:[{type:'public-key',id:unb64(id),transports:['internal']}],
+      userVerification:'required',rpId:location.hostname,timeout:60000
+    }});
+    if(ok){sessionStorage.setItem('mmc_portal_auth','true');enterPortal()}
+  }catch(e){/* cancelou ou falhou -> segue pela senha */}
+}
+function mostrarBotaoFaceID(){
+  if(temFaceID&&localStorage.getItem(FACE_KEY)){
+    document.getElementById('btnFace').style.display='flex';
+    document.getElementById('faceOu').style.display='block';
+  }
+}
+function talvezOferecerFaceID(){
+  if(temFaceID&&!localStorage.getItem(FACE_KEY)&&!localStorage.getItem(FACE_SKIP)){
+    setTimeout(()=>{document.getElementById('faceBanner').style.display='block'},900);
+  }
+}
+
 // Check if already logged in
-if(sessionStorage.getItem('mmc_portal_auth')==='true') enterPortal();
+if(sessionStorage.getItem('mmc_portal_auth')==='true') enterPortal(); else mostrarBotaoFaceID();
 
 function doLogin(){
   const p=document.getElementById('loginPass').value;
   if(p===PASS){
     sessionStorage.setItem('mmc_portal_auth','true');
     enterPortal();
+    talvezOferecerFaceID();
   }else{
     document.getElementById('loginErr').style.display='block';
     document.getElementById('loginPass').style.borderColor='#ef4444';

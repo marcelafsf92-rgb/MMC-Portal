@@ -191,10 +191,11 @@ function mostrarBotaoFaceID(){
     document.getElementById('faceOu').style.display='block';
   }
 }
-function talvezOferecerFaceID(){
-  if(temFaceID&&!localStorage.getItem(FACE_KEY)&&!localStorage.getItem(FACE_SKIP)){
-    setTimeout(()=>{document.getElementById('faceBanner').style.display='block'},900);
-  }
+async function talvezOferecerFaceID(){
+  if(!temFaceID||localStorage.getItem(FACE_KEY)||localStorage.getItem(FACE_SKIP))return;
+  // so oferece se o aparelho tem biometria de verdade (Face ID / Touch ID / Windows Hello)
+  try{ if(!await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())return }catch(e){return}
+  setTimeout(()=>{document.getElementById('faceBanner').style.display='block'},900);
 }
 
 // Check if already logged in
